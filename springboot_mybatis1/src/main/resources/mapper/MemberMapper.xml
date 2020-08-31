@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ksmart36.mybatis.mapper.MemberMapper">
+	<!-- 추상메서드명,  -->
+	<resultMap type="Member" id="memberResultMap">
+		<result column="m_id" property="memberId"/>
+		<result column="m_pw" property="memberPw"/>
+		<result column="m_name" property="memberName"/>
+		<result column="m_level" property="memberLevel"/>
+		<result column="m_email" property="memberEmail"/>
+		<result column="m_addr" property="memberAddr"/>
+		<result column="m_reg_date" property="memberRegDate"/>
+	</resultMap>
+		<select id="getLoginCount" resultType="int">
+		SELECT 
+			 COUNT(*)
+		FROM 
+			tb_login;
+	</select>
+	
+	<select id="getLoginHistory" resultType="hashMap" parameterType="map">
+		SELECT 
+		 	 login.rowNum 			AS rowNum
+			,login.login_id			AS loginId
+			,login.login_date		AS loginDate
+			,login.logout_date		AS logoutDate
+		FROM 
+			(SELECT
+				 (@rowNum := @rowNum+1) AS rowNum
+				,l.login_id		
+				,l.login_date	
+				,l.logout_date	
+			FROM 
+				tb_login AS l
+				JOIN
+				(SELECT @rowNum:=0) AS r
+			ORDER BY l.login_date DESC) AS login
+		LIMIT #{startRow},#{rowPerPage};
+	</select>
+	<select id="getMemberList" resultMap="memberResultMap">
+		SELECT 
+			 m_id
+			,m_pw
+			,m_name
+			,m_level
+			,m_email
+			,m_addr
+			,m_reg_date
+		FROM 
+			tb_member
+	</select>
+	<insert id="addMember" parameterType="Member">
+		INSERT INTO tb_member
+		(m_id, m_pw, m_name, m_level, m_email, m_addr, m_reg_date)
+		VALUES (
+					#{memberId}
+					,#{memberPw}
+					,#{memberName}
+					,3
+					,#{memberEmail}
+					,#{memberAddr}
+					,NOW()
+				)
+	</insert>
+	<select id="getMember" parameterType="String" resultMap="memberResultMap">
+		SELECT 
+			 m_id
+			,m_pw
+			,m_name
+			,m_email
+			,m_addr
+			,m_level
+		FROM 
+			tb_member
+		where
+			m_id=#{memberId}
+	</select>
+	<update id="modifyMember" parameterType="Member">
+		UPDATE tb_member
+		<!-- 맨 마지막에 ,가 있으면 지워준다. -->
+		<trim prefix="SET" suffixOverrides=",">
+			<if test="memberPw != null and memberPw neq ''.toString()">
+				m_pw = #{memberPw},
+			</if>
+			<if test="memberName != null and memberName neq ''.toString()">
+				m_name = #{memberName},
+			</if>
+			<if test="memberLevel != null and memberLevel neq ''.toString()">
+				m_level = #{memberLevel},
+			</if>
+			<if test="memberEmail != null and memberEmail neq ''.toString()">
+				m_email = #{memberEmail},
+			</if>
+			<if test="memberAddr != null and memberAddr neq ''.toString()">
+				m_addr = #{memberAddr}
+			</if>
+		</trim>
+				WHERE
+					m_id = #{memberId}	
+	</update>
+	<!-- 1. rogin 기록 삭제 -->
+	<delete id="removeLogin" parameterType="String">
+		delete
+		from
+			tb_login
+		where
+			<if test="memberId != null and memberId != ''.toString()">
+				login_id = #{memberId}
+			</if>
+	</delete>
+	<!-- 2.상품테이블 통해 g_code 조회  -->
+	<select id="getGoodsCodeById" parameterType="String" resultType="hashMap">
+		SELECT
+			g_code
+		FROM
+			tb_goods
+		WHERE
+			g_seller_id=#{memberId}
+	</select>
+	<!-- 2-2. 주문 테이블 삭제 -->
+	<delete id="removeOrder" parameterType="String">
+		delete
+		from
+			tb_order
+		<trim prefix="WHERE" prefixOverrides="AND |OR">
+			<!-- 반복문을 돌리는데 값이 있으면 or를 붙혀주고 다음으로 하고 마지막일 때 or을 지워준다.(trim) -->
+			<foreach collection="goodsCodeList" item="item" separator="OR">
+				<if test="item.goodsCode != null and item.goodsCode != ''.toString()">
+					o_g_code = #{item.goodsCood}
+				</if>
+			</foreach>
+		</trim>
+	</delete>
+	<!-- 3.상품테이블 삭제 -->
+	<delete id="removeGoods" parameterType="String">
+		delete
+		from
+			tb_goods
+		where
+			<if test="memberId != null and memberId != ''.toString()">
+				g_seller_id = #{memberId}
+			</if>
+	</delete>
+	<!-- 4. member 기록 삭제 -->
+	<delete id="deleteMember" parameterType="String">
+		delete
+		from
+			tb_member
+		where
+			<if test="memberId != null and memberId != ''.toString()">
+				m_id = #{memberId}
+			</if>
+	</delete>
+	
+	<select id="searchMember" parameterType="String" resultType="Member">
+		SELECT 
+			m_id AS memberId
+			,m_pw AS memberPw
+			,m_name AS memberName
+			,m_level AS memberLevel
+			,m_email AS memberEmail
+			,m_addr AS memberAddr
+			,m_reg_date AS memberRegDate
+		FROM tb_member
+		WHERE
+			${col} like concat('%',#{val},'%')
+	</select>
+</mapper>

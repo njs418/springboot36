@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ksmart36.mybatis.mapper.GoodsMapper">
+	<resultMap type="Goods" id="goodsResultMap">
+		<result column="g_code" property="goodsCode"/>
+		<result column="g_name" property="goodsName"/>
+		<result column="g_price" property="goodsPrice"/>
+		<result column="g_seller_id" property="goodsSellerId"/>
+		<result column="g_reg_date" property="goodsRegDate"/>
+	</resultMap>
+	<insert id="addGoods" parameterType="Goods">
+		<selectKey resultType="String" keyProperty="goodsCode" order="BEFORE">
+		select
+			CONCAT('g0',MAX(cast(substring(g_code,3) AS DECIMAL))+1) AS goodsCode
+		from tb_goods
+		</selectKey>
+		INSERT INTO tb_goods
+			(g_code, g_name, g_price, g_seller_id, g_reg_date)
+		VALUES (	
+			#{goodsCode}
+			,#{goodsName}
+			,${goodsPrice}
+			,#{goodsSellerId}
+			,NOW()
+			)
+	</insert>
+	<select id="getGoodsCount" resultType="int">
+		select
+			COUNT(*)
+		FROM
+			tb_goods;
+	</select>
+	<select id="goodsList" resultMap="goodsResultMap" parameterType="map">
+		select
+			*
+		FROM
+			tb_goods
+		LIMIT #{startRow},#{rowPerPage};
+	</select>
+	<select id="modifyGoods" parameterType="String" resultMap="goodsResultMap">
+		select
+			*
+		FROM
+			tb_goods
+		WHERE
+			g_code=#{goodsCode}
+	</select>
+	<update id="updateGoods" parameterType="String">
+		UPDATE tb_goods
+	SET
+		g_name=#{goodsName}, 
+		g_price=${goodsPrice}
+	WHERE g_code=#{goodsCode}
+	</update>
+	<delete id="deleteGoods" parameterType="String">
+		DELETE FROM tb_goods WHERE g_code=#{goodsCode}
+	</delete>
+</mapper>

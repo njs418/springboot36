@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+	  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	  layout:decorate="~{layout/default}">
+	  
+
+	<th:block layout:fragment="customCss"></th:block>
+	<th:block layout:fragment="customTitle">
+		<title th:text="${title}"></title>
+	</th:block>
+	<th:block layout:fragment="customJs"></th:block>
+	<th:block layout:fragment="customContent">
+	<h1 th:text=${title}></h1>
+	<form action="/modifyGoods" method="post">
+		<table border="1">
+			<tr>
+				<td>상품코드 </td><td><input type="text" name="goodsCode" th:value="${goods.goodsCode}" readonly="readonly"></td>
+			</tr>
+			<tr>
+				<td>상품명 </td><td><input type="text" name="goodsName" th:value="${goods.goodsName}"></td>
+			</tr>
+			<tr>
+				<td>상품가격 </td><td><input type="text" name="goodsPrice" th:value="${goods.goodsPrice}"></td>
+			</tr>
+			<tr>
+				<td>판매자 </td><td><input type="text" name="goodsSellerId" th:value="${goods.goodsSellerId}" readonly="readonly"></td>
+			</tr>
+			<tr>
+				<td>등록일자 </td><td><input type="text" name="goodsRegDate" th:value="${goods.goodsRegDate}" readonly="readonly"></td>
+			</tr>
+			<tr>
+				<td colspan="2" style="text-align: center;"><input type="submit" value="수정버튼"></td>
+			</tr>
+		</table>
+	</form>
+	</th:block>
+	<th:block layout:fragment="customJsScript"></th:block>
+</html>
